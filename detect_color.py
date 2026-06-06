@@ -1,30 +1,37 @@
-import numpy as np
 import argparse
 import cv2
+import numpy as np
 
-#construct the argument parser
 ap = argparse.ArgumentParser()
-ap.add_argument("-i","--image",help="-i/--image path to file")
-args = vars(ap.parse_args())
+ap.add_argument("-i","--image",help="path to file")
+args=vars(ap.parse_args())
 
-#load the image 
-image = cv2.imread(args["image"])  
+#get the image
+image = cv2.imread(args["image"])
 
-# define the list of color boundaries
+#convert to hsv for more comprehensive color
+hsv_image = cv2.cvtColor(image,cv2.COLOR_BGR2HSV)
+
+#colors
 boundaries = [
-	([17, 15, 100], [50, 56, 200]),
-	([86, 31, 4], [220, 88, 50]),
-	([25, 146, 190], [62, 174, 250]),
-	([103, 86, 65], [145, 133, 128])
-]  
+    ([100, 50, 50], [140, 255, 255]), # Comprehensive Blues
+    ([35, 50, 50], [85, 255, 255]),   # Comprehensive Greens
+    ([15, 50, 50], [35, 255, 255]),   # Comprehensive Yellows/Golds
+    
+    # Red is tricky because it wraps around the 0 mark in HSV. 
+    # This range catches the primary red spectrum:
+    ([0, 50, 50], [10, 255, 255])     
+] 
 
-# loop over the boundaries
 for (lower,upper) in boundaries:
-    lower = np.array(lower, dtype = "uint8")
-    upper = np.array(upper, dtype = "uint8")   
-    #mask the image
-    mask = cv2.inRange(image, lower, upper)
-    output = cv2.bitwise_and(image,image, mask=mask)   
-    #show the images
-    cv2.imshow("images", np.hstack([image,output]))
-    cv2.waitKey(0) 
+    #convert bounds to np arrays
+    lower = np.array(lower,dtype="uint8")
+    upper = np.array(upper,dtype="uint8")
+
+    #mask
+    mask = cv2.inRange(hsv_image,lower,upper)
+    #convert the image
+    output = cv2.bitwise_and(image,image, mask=mask)
+
+    cv2.imshow("images",np.hstack([image,output]))
+    cv2.waitKey(0)
